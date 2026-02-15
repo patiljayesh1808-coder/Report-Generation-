@@ -1,0 +1,19 @@
+{
+  "name": "Sumit Vinod Bhalerao",
+  "roll": "449",
+  "className": "T.Y.B.Sc",
+  "attendance": "34",
+  "subjects": [
+    {
+      "sName": "sss",
+      "sInternal": 12,
+      "sPractical": 12,
+      "assignment": "no",
+      "bonus": 0,
+      "total": 24,
+      "internalStatus": "PASS",
+      "practicalStatus": "PASS",
+      "overallStatus": "PASS"
+    }
+  ]
+}

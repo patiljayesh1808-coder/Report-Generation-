@@ -1,0 +1,19 @@
+{
+  "name": "Shreya Ramrao Patil",
+  "roll": "402",
+  "className": "T.Y.B.Sc",
+  "attendance": "80",
+  "subjects": [
+    {
+      "sName": "evs",
+      "sInternal": 14,
+      "sPractical": 14,
+      "assignment": "yes",
+      "bonus": 5,
+      "total": 33,
+      "internalStatus": "PASS",
+      "practicalStatus": "PASS",
+      "overallStatus": "PASS"
+    }
+  ]
+}

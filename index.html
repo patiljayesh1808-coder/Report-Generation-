@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Report Card Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      max-width: 950px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .hidden { display: none; }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #aaa;
+    }
+    th, td {
+      padding: 10px;
+      text-align: center;
+    }
+    .btn {
+      background: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    .btn.back {
+        background: #f44336; 
+    }
+    .btn.back:hover {
+        background: #da190b;
+    }
+    .btn:hover { background: #45a049; }
+    .fail { color: red; font-weight: bold; }
+    .pass { color: green; font-weight: bold; }
+    .link-box {
+      margin-top: 20px;
+      padding: 10px;
+      background: #eef;
+      border: 1px solid #99c;
+      border-radius: 5px;
+    }
+    .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-start;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Student Report Card System</h1>
+
+    <div id="searchSection">
+      <h2>Search Student</h2>
+      <select id="selectClass" required>
+          <option value="">-- Select Class --</option>
+          <option value="F.Y.B.Sc">F.Y.B.Sc</option>
+          <option value="S.Y.B.Sc">S.Y.B.Sc</option>
+          <option value="T.Y.B.Sc">T.Y.B.Sc</option>
+      </select>
+      <input type="text" id="searchRoll" placeholder="Enter Roll Number" onkeyup="autoFillName()">
+      <input type="text" id="searchName" placeholder="Student Name" readonly>
+      <button class="btn" onclick="searchStudent()">Search</button>
+    </div>
+
+    <div id="formSection" class="hidden">
+      <h2>Enter Student Details</h2>
+      <form id="reportForm">
+        <input type="text" id="name" placeholder="Student Name" required readonly>
+        <input type="text" id="roll" placeholder="Roll Number" required readonly>
+        
+        <input type="text" id="class" placeholder="Class" required readonly>
+
+        <input type="number" id="attendance" placeholder="Attendance (%)" required>
+        
+        <h3>Subjects & Marks</h3>
+        <div id="subjects">
+          <div>
+            <input type="text" placeholder="Subject Name" class="subjectName">
+            <input type="number" placeholder="Internal Marks (out of 15)" class="internalMarks">
+            <input type="number" placeholder="Practical Marks (out of 15)" class="practicalMarks">
+            <select class="assignment">
+              <option value="no">Assignment Submitted? No</option>
+              <option value="yes">Assignment Submitted? Yes</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" class="btn" onclick="addSubject()">+ Add Subject</button>
+        <br>
+        <div class="button-group">
+            <button type="button" class="btn back" onclick="goBackToSearch()">Go Back to Search</button>
+            <button type="submit" class="btn">Generate Report Card</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="reportSection" class="hidden">
+      <h2>Report Card</h2>
+      <div id="reportContent"></div>
+      <button class="btn" onclick="editReport()">Edit</button>
+      <button class="btn" onclick="goBack()">Go Back</button>
+      <button class="btn" onclick="downloadPDF()">Download PDF</button>
+      <button class="btn" onclick="printReport()">Print Report</button>
+      
+      <div class="link-box">
+        <p>Direct link to this student’s report:</p>
+        <input type="text" id="shareLink" readonly style="width:100%">
+        <button class="btn" onclick="copyLink()">Copy Link</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- STUDENT DATABASE: Separated by Class (kept entirely the same) ---
+    const studentData = {
+      "F.Y.B.Sc": [
+        { roll: "101", name: "Anil Bharat Chaudhari" },
+        { roll: "102", name: "Bhavana Suresh Jadhav" },
+        { roll: "103", name: "Chetan Vijay More" },
+        { roll: "104", name: "Dipti Prakash Solanki" },
+        { roll: "105", name: "Eknath Ravi Deshmukh" },
+        { roll: "106", name: "Farah Ismail Shaikh" },
+        { roll: "107", name: "Ganesh Mohan Kulkarni" },
+        { roll: "108", name: "Harshada Sanjay Sharma" },
+        { roll: "109", name: "Isha Pramod Kadam" },
+        { roll: "110", name: "Jatin Rakesh Singhal" },
+        { roll: "111", name: "Kajal Santosh Raut" },
+        { roll: "112", name: "Lalit Ashok Mane" },
+        { roll: "113", name: "Mitali Dilip Gupta" },
+        { roll: "114", name: "Nitin Ramesh Patil" },
+        { roll: "115", name: "Omkar Rajesh Sutar" },
+        { roll: "116", name: "Pooja Vasant Shinde" },
+        { roll: "117", name: "Qasim Imran Khan" },
+        { roll: "118", name: "Rina Subhash Bhosle" },
+        { roll: "119", name: "Samarth Arjun Gaikwad" },
+        { roll: "120", name: "Tanishka Sunil Rane" },
+        { roll: "121", name: "Ujwal Hemant Pandit" },
+        { roll: "122", name: "Vaishnavi Mahesh Koli" },
+        { roll: "123", name: "Wasim Javed Ansari" },
+        { roll: "124", name: "Xena Suresh Pawar" },
+        { roll: "125", name: "Yashraj Deepak Teli" },
+        { roll: "126", name: "Zoya Afzal Inamdar" },
+        { roll: "127", name: "Rahul Govind Kale" },
+        { roll: "128", name: "Swati Madan Naik" },
+        { roll: "129", name: "Pravin Kiran Borse" },
+        { roll: "130", name: "Kirti Gopal Malviya" }
+      ],
+      "S.Y.B.Sc": [
+        { roll: "201", name: "Rohit Shrikant Agrawal" },
+        { roll: "202", name: "Priya Anand Sali" },
+        { roll: "203", name: "Vishal Dinesh Sonawane" },
+        { roll: "204", name: "Shruti Hemant Zope" },
+        { roll: "205", name: "Ajay Ramesh Wagh" },
+        { roll: "206", name: "Neeta Sunil Rathi" },
+        { roll: "207", name: "Sanket Mangesh Shirole" },
+        { roll: "208", name: "Aaradhya Ketan Shah" },
+        { roll: "209", name: "Kiran Vilas Phadke" },
+        { roll: "210", name: "Megha Dilip Khairnar" },
+        { roll: "211", name: "Gaurav Nitin More" },
+        { roll: "212", name: "Trupti Sachin Deshpande" },
+        { roll: "213", name: "Akash Balu Chavan" },
+        { roll: "214", name: "Poonam Harish Joshi" },
+        { roll: "215", name: "Bhushan Suresh Ahirrao" },
+        { roll: "216", name: "Shreya Gopal Bhandari" },
+        { roll: "217", name: "Sagar Prakash Dube" },
+        { roll: "218", name: "Janhavi Kishor Palve" },
+        { roll: "219", name: "Prathmesh Anand Jagtap" },
+        { roll: "220", name: "Rutuja Jayesh Kulkarni" },
+        { roll: "221", name: "Hritik Vinod Gosavi" },
+        { roll: "222", name: "Sakshi Anil Kalal" },
+        { roll: "223", name: "Vaibhav Mohan Koli" },
+        { roll: "224", name: "Anjali Rajesh Wani" },
+        { roll: "225", name: "Kunal Vijay Mundhe" },
+        { roll: "226", name: "Deepa Narayan Gite" },
+        { roll: "227", name: "Yogesh Madhav Rane" },
+        { roll: "228", name: "Ketaki Ramesh Dhole" },
+        { roll: "229", name: "Dhananjay Bapu Sonar" },
+        { roll: "230", name: "Alisha Akbar Pathan" }
+      ],
+      "T.Y.B.Sc": [
+        { roll: "361", name: "Priyanka Jagdish Patil" },
+        { roll: "443", name: "Kothari Kriya Hemendra" },
+        { roll: "362", name: "Ashwini Jitendra Patil" },
+        { roll: "452", name: "Thakare Tanvi Promod" },
+        { roll: "364", name: "Patil Payal Ravindra" },
+        { roll: "448", name: "Patil Nisha Nyaneshwar" },
+        { roll: "365", name: "Jagruti Chandrakant Patil" },
+        { roll: "447", name: "Jagruti Hemant Zimbal" },
+        { roll: "366", name: "Jagauti Chandrashekhar Patil" },
+        { roll: "367", name: "Mukund Prashant Ahire" },
+        { roll: "368", name: "Dipti Dinesh Koli" },
+        { roll: "369", name: "Arpita Sukdev Sonawane" },
+        { roll: "400", name: "Nikita Sanjay Badgujar" },
+        { roll: "402", name: "Shreya Ramrao Patil" },
+        { roll: "403", name: "Harshada Dipak Choudhari" },
+        { roll: "404", name: "Divya Lotan Patil" },
+        { roll: "405", name: "Rajashri Sunil Patil" },
+        { roll: "406", name: "Pankaj Sunil Patil" },
+        { roll: "407", name: "Gosavi Ruchita Pramod" },
+        { roll: "408", name: "Ashwini Jagannat Badguger" },
+        { roll: "409", name: "Kalpesh Mukesh Bugisar" },
+        { roll: "410", name: "Bhagyashri Dilip Patil" },
+        { roll: "370", name: "Priyanka Pundlik Koli" },
+        { roll: "445", name: "Patil Mansi Digambar" },
+        { roll: "412", name: "Kalpesh Pradip Patil" },
+        { roll: "411", name: "Jayesh Nandlal Patil" },
+        { roll: "413", name: "Mrudul Shankar Pawar" },
+        { roll: "414", name: "Pavan Santosh Patil" },
+        { roll: "453", name: "Yash Mahendrasing Pardeshi" },
+        { roll: "442", name: "Patil Rohit Sanjay" },
+        { roll: "441", name: "Rahul Dileep Kumbhar" },
+        { roll: "420", name: "Vedant Bhagvat Patil" },
+        { roll: "419", name: "Hemant Bapu Kumbhar" },
+        { roll: "418", name: "Harshvardhan Bharat Patil" },
+        { roll: "417", name: "Tushar Adhikar Patil" },
+        { roll: "416", name: "Gayatri Manoj Pawar" },
+        { roll: "415", name: "Suchita Ratnakar Patil" },
+        { roll: "458", name: "Vispute Aakanksha Suresh" },
+        { roll: "496", name: "Nikeeta Dinesh Patil" },
+        { roll: "374", name: "Patil Manjusha Jagdish" },
+        { roll: "375", name: "Patil Chaitali Vilay" },
+        { roll: "376", name: "Patil Madhuri Vinod" },
+        { roll: "377", name: "Patil Kaveri Dilip" },
+        { roll: "378", name: "Patil Rohit Nanabhau" },
+        { roll: "379", name: "Kate Hitesh Mahendra" },
+        { roll: "382", name: "Dhanashri Gokul Choudhary" },
+        { roll: "449", name: "Sumit Vinod Bhalerao" },
+        { roll: "384", name: "Patil Pratibha Laxman" },
+        { roll: "385", name: "Dhanashri Bhaiyyasaheb Mal" },
+        { roll: "456", name: "Hemraj Hiralal Patil" },
+        { roll: "463", name: "Sakshi Bhaiyya Patil" },
+        { roll: "459", name: "Priti Rajendra Gajare" },
+        { roll: "451", name: "Vina Pravin Bhamare" },
+        { roll: "455", name: "Mansi Tukaram Mahale" },
+        { roll: "454", name: "Karuna Ramesh Kale" }
+      ]
+    };
+    
+    // Helper function to find student and their class across all lists
+    function findStudentByRoll(roll) {
+        for (const className in studentData) {
+            const student = studentData[className].find(s => s.roll === roll);
+            if (student) {
+                return { ...student, className: className };
+            }
+        }
+        return null;
+    }
+
+    function autoFillName() {
+      let roll = document.getElementById("searchRoll").value.trim();
+      const studentInfo = findStudentByRoll(roll);
+
+      if (studentInfo) {
+        document.getElementById("searchName").value = studentInfo.name;
+        document.getElementById("selectClass").value = studentInfo.className;
+      } else {
+        document.getElementById("searchName").value = "";
+      }
+    }
+
+    function getCurrentStudentList() {
+      const selectedClass = document.getElementById("selectClass").value;
+      return studentData[selectedClass] || [];
+    }
+
+    // ------------- CHANGED: backend check for existing saved report (instead of localStorage) -------------
+    async function searchStudent() {
+      let roll = document.getElementById("searchRoll").value.trim();
+      let selectedClass = document.getElementById("selectClass").value;
+      
+      if (!selectedClass) {
+        alert("Please enter a Roll Number to auto-select the class, or select a Class manually. 🧑‍🏫");
+        return;
+      }
+
+      const currentList = getCurrentStudentList();
+      let student = currentList.find(s => s.roll === roll);
+      
+      if (student) {
+        // check server for saved report
+        try {
+          const res = await fetch(`/api/report/${roll}`);
+          if (res.ok) {
+            const reportData = await res.json();
+            if (reportData.className !== selectedClass) {
+               alert(`A report exists for Roll: ${roll} in class ${reportData.className}. Please check the selected class.`);
+               return;
+            }
+            showReport(reportData);
+            return;
+          }
+          // if 404 -> no saved report, proceed to form
+        } catch (err) {
+          console.error("Error checking saved report:", err);
+          // if server error, we still allow manual flow (optional)
+        }
+        
+        // Populate the form and show the form section
+        document.getElementById("searchSection").classList.add("hidden");
+        document.getElementById("formSection").classList.remove("hidden");
+        document.getElementById("roll").value = student.roll;
+        document.getElementById("name").value = student.name;
+        document.getElementById("class").value = selectedClass; 
+
+        // Reset subjects
+        document.getElementById("subjects").innerHTML = `
+            <div>
+                <input type="text" placeholder="Subject Name" class="subjectName">
+                <input type="number" placeholder="Internal Marks (out of 15)" class="internalMarks">
+                <input type="number" placeholder="Practical Marks (out of 15)" class="practicalMarks">
+                <select class="assignment">
+                    <option value="no">Assignment Submitted? No</option>
+                    <option value="yes">Assignment Submitted? Yes</option>
+                </select>
+            </div>`;
+            
+      } else {
+        alert("Student not found. Please ensure the Roll Number is correct for the auto-selected/manually selected class. 🤔");
+      }
+    }
+
+    function addSubject() {
+      let div = document.createElement("div");
+      div.innerHTML = `
+        <input type="text" placeholder="Subject Name" class="subjectName">
+        <input type="number" placeholder="Internal Marks (out of 15)" class="internalMarks">
+        <input type="number" placeholder="Practical Marks (out of 15)" class="practicalMarks">
+        <select class="assignment">
+          <option value="no">Assignment Submitted? No</option>
+          <option value="yes">Assignment Submitted? Yes</option>
+        </select>
+      `;
+      document.getElementById("subjects").appendChild(div);
+    }
+
+    // ------------- CHANGED: save to server (instead of localStorage) -------------
+    document.getElementById("reportForm").addEventListener("submit", async function(e){
+      e.preventDefault();
+
+      let data = {
+        name: document.getElementById("name").value,
+        roll: document.getElementById("roll").value,
+        className: document.getElementById("class").value, 
+        attendance: document.getElementById("attendance").value,
+        subjects: []
+      };
+
+      let subjects = document.querySelectorAll("#subjects div");
+      let allSubjectsFilled = true;
+      subjects.forEach(sub => {
+        let sName = sub.querySelector(".subjectName").value.trim();
+        let sInternal = parseInt(sub.querySelector(".internalMarks").value) || 0; 
+        let sPractical = parseInt(sub.querySelector(".practicalMarks").value) || 0; 
+        let assignment = sub.querySelector(".assignment").value;
+        
+        if (!sName) {
+            allSubjectsFilled = false;
+        }
+        
+        let bonus = assignment === "yes" ? 5 : 0;
+        let total = sInternal + sPractical + bonus;
+        
+        const internalStatus = sInternal >= 7 ? "PASS" : "FAIL";
+        const practicalStatus = sPractical >= 7 ? "PASS" : "FAIL";
+        const overallStatus = (internalStatus === "PASS" && practicalStatus === "PASS") ? "PASS" : "FAIL";
+
+        if (sName) {
+          data.subjects.push({ 
+            sName, 
+            sInternal, 
+            sPractical, 
+            assignment, 
+            bonus, 
+            total, 
+            internalStatus,       
+            practicalStatus,      
+            overallStatus         
+          });
+        }
+      });
+      
+      if (!allSubjectsFilled) {
+          alert("Please ensure all subject names are entered for all subjects added. 📝");
+          return;
+      }
+      
+      if (data.subjects.length === 0) {
+          alert("Please add at least one subject. ➕");
+          return;
+      }
+
+      // send to server
+      try {
+        const res = await fetch('/api/report', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          // show the report using the saved server data
+          showReport(data);
+        } else {
+          alert(result.error || "Error saving report on server.");
+        }
+      } catch (err) {
+        console.error("Error saving report:", err);
+        alert("Server error while saving report.");
+      }
+    });
+
+    function showReport(data) {
+      let subjectData = "";
+      data.subjects.forEach(sub => {
+        
+        subjectData += `<tr>
+          <td>${sub.sName}</td>
+          <td>${sub.sInternal}/15</td>
+          <td class="${sub.internalStatus === "PASS" ? "pass" : "fail"}">${sub.internalStatus}</td>
+          <td>${sub.sPractical}/15</td>
+          <td class="${sub.practicalStatus === "PASS" ? "pass" : "fail"}">${sub.practicalStatus}</td>
+          <td>${sub.assignment === "yes" ? "Yes (+5)" : "No"}</td>
+          <td>${sub.total}</td>
+        </tr>`;
+      });
+
+      let reportHTML = `
+        <p><strong>Name:</strong> ${data.name}</p>
+        <p><strong>Roll Number:</strong> ${data.roll}</p>
+        <p><strong>Class:</strong> ${data.className}</p>
+        <p><strong>Attendance:</strong> ${data.attendance}%</p>
+        <h3>Marks</h3>
+        <table>
+          <tr>
+            <th rowspan="2">Subject</th>
+            <th colspan="2">Internal (Min 7)</th>
+            <th colspan="2">Practical (Min 7)</th>
+            <th rowspan="2">Assignment</th>
+            <th rowspan="2">Total (Out of 35)</th>
+          </tr>
+          <tr>
+            <th>Marks</th>
+            <th>Status</th>
+            <th>Marks</th>
+            <th>Status</th>
+          </tr>
+          ${subjectData}
+        </table>
+      `;
+
+      document.getElementById("formSection").classList.add("hidden");
+      document.getElementById("searchSection").classList.add("hidden"); 
+      document.getElementById("reportSection").classList.remove("hidden");
+      document.getElementById("reportContent").innerHTML = reportHTML;
+
+      let url = window.location.origin + window.location.pathname + "?roll=" + data.roll;
+      document.getElementById("shareLink").value = url;
+    }
+
+    // ------------- CHANGED: edit loads from server -------------
+    async function editReport() {
+      let roll = document.getElementById("roll").value;
+      
+      try {
+        const res = await fetch(`/api/report/${roll}`);
+        if (!res.ok) {
+          alert("Error: Could not retrieve saved report data for editing. ❌");
+          return;
+        }
+        const data = await res.json();
+
+        // 1. Explicitly set the read-only fields from the data
+        document.getElementById("roll").value = data.roll;
+        document.getElementById("name").value = data.name;
+        document.getElementById("class").value = data.className;
+
+        // 2. Set the attendance value
+        document.getElementById("attendance").value = data.attendance;
+
+        // 3. Clear existing subject fields and rebuild from saved data
+        document.getElementById("subjects").innerHTML = '';
+        data.subjects.forEach(sub => {
+            let div = document.createElement("div");
+            div.innerHTML = `
+              <input type="text" placeholder="Subject Name" class="subjectName" value="${sub.sName}">
+              <input type="number" placeholder="Internal Marks (out of 15)" class="internalMarks" value="${sub.sInternal}">
+              <input type="number" placeholder="Practical Marks (out of 15)" class="practicalMarks" value="${sub.sPractical}">
+              <select class="assignment">
+                <option value="no" ${sub.assignment === "no" ? "selected" : ""}>Assignment Submitted? No</option>
+                <option value="yes" ${sub.assignment === "yes" ? "selected" : ""}>Assignment Submitted? Yes</option>
+              </select>
+            `;
+            document.getElementById("subjects").appendChild(div);
+        });
+      
+        // 4. Transition views
+        document.getElementById("reportSection").classList.add("hidden");
+        document.getElementById("formSection").classList.remove("hidden");
+      } catch (err) {
+        console.error("Error loading report for edit:", err);
+        alert("Could not load report for editing.");
+      }
+    }
+
+    function goBackToSearch() {
+        document.getElementById("formSection").classList.add("hidden"); 
+        document.getElementById("searchSection").classList.remove("hidden");
+        document.getElementById("searchRoll").value = "";
+        document.getElementById("searchName").value = "";
+    }
+
+    function goBack() {
+      document.getElementById("reportSection").classList.add("hidden");
+      document.getElementById("formSection").classList.add("hidden"); 
+      document.getElementById("searchSection").classList.remove("hidden");
+      document.getElementById("searchRoll").value = "";
+      document.getElementById("searchName").value = "";
+    }
+
+    // --- Utility functions (unchanged) ---
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      let element = document.getElementById("reportContent");
+
+      html2canvas(element).then(canvas => {
+        let imgData = canvas.toDataURL("image/png");
+        let pdf = new jsPDF("p", "mm", "a4");
+        let imgWidth = 190;
+        let pageHeight = 290;
+        let imgHeight = canvas.height * imgWidth / canvas.width;
+        let position = 10;
+        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+        pdf.save("report_card.pdf");
+      });
+    }
+
+    function printReport() {
+      let content = document.getElementById("reportContent").innerHTML;
+      let printWindow = window.open("", "", "height=700,width=900");
+      printWindow.document.write("<html><head><title>Report Card</title><style>table, th, td {border: 1px solid #aaa; border-collapse: collapse; padding: 10px; text-align: center;} .fail { color: red; font-weight: bold; } .pass { color: green; font-weight: bold; }</style></head><body>");
+      printWindow.document.write(content);
+      printWindow.document.write("</body></html>");
+      printWindow.document.close();
+      printWindow.print();
+    }
+
+    function copyLink() {
+      let link = document.getElementById("shareLink");
+      link.select();
+      document.execCommand("copy");
+      alert("Link copied! Share with student. 🔗");
+    }
+
+    // ------------- CHANGED: on load, check server for report if URL has roll -------------
+    window.onload = async function() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("roll")) {
+        let roll = params.get("roll");
+        try {
+          const res = await fetch(`/api/report/${roll}`);
+          if (res.ok) {
+            let data = await res.json();
+            document.getElementById("selectClass").value = data.className; 
+            showReport(data);
+          } else {
+            // no saved report - prefill search box
+            document.getElementById("searchRoll").value = roll;
+            autoFillName();
+          }
+        } catch (err) {
+          console.error("Error checking report on load:", err);
+          document.getElementById("searchRoll").value = roll;
+          autoFillName();
+        }
+      }
+    }
+  </script>
+</body>
+</html>

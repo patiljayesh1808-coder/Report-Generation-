@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Student Report Card Portal</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="page-bg"></div>
+<header class="site-header">
+<div class="brand">
+<div class="logo-circle">SR</div>
+<div>
+<h1>Student Report Card Portal</h1>
+<p class="sub">Professional • Responsive • Animated</p>
+</div>
+</div>
+</header>
+
+
+<main class="container">
+{% block content %}{% endblock %}
+</main>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

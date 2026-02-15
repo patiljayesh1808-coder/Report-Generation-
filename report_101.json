@@ -1,0 +1,19 @@
+{
+  "name": "Anil Bharat Chaudhari",
+  "roll": "101",
+  "className": "F.Y.B.Sc",
+  "attendance": "45",
+  "subjects": [
+    {
+      "sName": "java",
+      "sInternal": 10,
+      "sPractical": 11,
+      "assignment": "yes",
+      "bonus": 5,
+      "total": 26,
+      "internalStatus": "PASS",
+      "practicalStatus": "PASS",
+      "overallStatus": "PASS"
+    }
+  ]
+}

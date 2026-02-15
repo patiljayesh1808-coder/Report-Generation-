@@ -1,0 +1,49 @@
+/* Base and gradient background */
+:root{
+--card-bg: rgba(255,255,255,0.85);
+--glass-border: rgba(255,255,255,0.6);
+}
+body,html{height:100%;margin:0;font-family:Inter, Arial, sans-serif;background:#f4f7fb}
+.page-bg{
+position:fixed;inset:0;background:linear-gradient(120deg,#0f172a 0%, #1e3a8a 40%, #6366f1 100%);
+filter: saturate(1.05);
+z-index:-2;
+}
+.container{max-width:1100px;margin:40px auto;padding:24px}
+.site-header{display:flex;align-items:center;color:white;padding:18px 24px}
+.brand{display:flex;gap:14px;align-items:center}
+.logo-circle{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#10b981,#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;box-shadow:0 8px 30px rgba(2,6,23,0.5)}
+.site-header h1{margin:0;font-size:20px}
+.site-header .sub{margin:0;font-size:12px;opacity:0.9}
+.card{background:var(--card-bg);border-radius:14px;padding:18px;box-shadow:0 6px 24px rgba(2,6,23,0.35);backdrop-filter: blur(6px);}
+.card.big{padding:28px}
+.hidden{display:none}
+.row{display:flex;align-items:center}
+.gap{gap:12px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+input,select{padding:10px;border-radius:8px;border:1px solid #e6edf3;font-size:14px}
+button.btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+.btn.primary{background:linear-gradient(90deg,#6366F1,#06B6D4);color:white}
+.btn.back{background:#ef4444;color:white}
+.button-row{display:flex;gap:10px;margin-top:14px}
+.card-inner{margin-top:14px}
+.subject-row{display:flex;gap:10px;align-items:center;margin:10px 0}
+.subject-row input{flex:1}
+.link-box{margin-top:18px;padding:12px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(240,246,255,0.7));border:1px solid rgba(0,0,0,0.06)}
+
+
+/* Table styles for report */
+#reportContent table{width:100%;border-collapse:collapse;margin-top:10px}
+#reportContent th,#reportContent td{border:1px solid #cfd8e3;padding:10px;text-align:center}
+.pass{color:green;font-weight:600}
+.fail{color:red;font-weight:700}
+
+
+/* Subtle animations */
+.fade-in{animation:fadeUp .6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+
+/* Responsive */
+@media (max-width:800px){.grid-3{grid-template-columns:1fr}
+.subject-row{flex-direction:column;align-items:stretch}}

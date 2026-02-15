@@ -1,0 +1,50 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Student Report Portal</title>
+    <style>
+        body { font-family: Arial; background-color: #f0f4f7; text-align: center; padding: 50px; }
+        .container { background: white; padding: 30px; border-radius: 10px; display: inline-block; box-shadow: 0 0 10px #aaa; }
+        input { padding: 10px; margin: 10px; font-size: 16px; }
+        button { padding: 10px 20px; background-color: #007BFF; color: white; border: none; cursor: pointer; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        #report { margin-top: 20px; text-align: left; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Student Report Access Portal</h2>
+        <input type="text" id="rollInput" placeholder="Enter Roll Number">
+        <button onclick="fetchReport()">Get Report</button>
+
+        <div id="report"></div>
+    </div>
+
+    <script>
+        async function fetchReport() {
+            const roll = document.getElementById('rollInput').value.trim();
+            const res = await fetch(`/api/student/${roll}`);
+            const data = await res.json();
+
+            const div = document.getElementById('report');
+            if (data.error) {
+                div.innerHTML = `<p style="color:red;">${data.error}</p>`;
+                return;
+            }
+
+            let html = `<h3>${data.name} (${data.roll})</h3>`;
+            html += `<p>Class: ${data.class}</p>`;
+            html += `<h4>Subjects:</h4><ul>`;
+            for (const [sub, marks] of Object.entries(data.subjects)) {
+                html += `<li>${sub}: ${marks}</li>`;
+            }
+            html += `</ul>`;
+            html += `<p><strong>Total:</strong> ${data.total}</p>`;
+            html += `<p><strong>Grade:</strong> ${data.grade}</p>`;
+            html += `<a href="/download/${data.roll}" target="_blank">Download PDF Report</a>`;
+
+            div.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
